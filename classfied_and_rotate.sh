@@ -1,0 +1,10 @@
+echo 'python 1-classify-frame.py'
+# python 1-classify-frame.py
+# python 6-rotate-shell.py
+# python 7-run-rotate-shell.py
+# cd ../shells
+# sh run_rotate.sh
+# python 5-imagelist.py
+# cd /media/ranqing/Work/RQProjects/ZJU/3-Rectification/build
+# sh run_rectification_a.sh
+# sh run_rectification_c.sh
