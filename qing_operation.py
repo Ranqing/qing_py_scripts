@@ -129,7 +129,7 @@ def qing_dsp_to_depth(dsp, thresh_msk, imgmtx, stereo_mtx, st_x, st_y, base_d, s
             dsp[y, x] += base_d
             pointcnt += 1
 
-    print('%d points generated!' % (pointcnt), end='\n')
+    # print('%d points generated!' % (pointcnt), end='\n')
 
     points = np.ndarray((pointcnt, 3))
     print(points.shape)

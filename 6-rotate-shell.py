@@ -1,4 +1,5 @@
 from qing_operation import *
+import getopt
 
 camera_names = ['A01', 'A02', 'A03', 'A04', 'A05', 'A06', 'A07', 'A08', 'A09', 'A10', 'A11', 'A12', 'A13', 'A14', 'A15', 'A16',
                 'B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B09', 'B10', 'B11', 'B12', 'B13', 'B14', 'B15', 'B16',
@@ -42,11 +43,31 @@ def rotate(workdir, outdir, shelldir):
         # write_file(cr2_file_name, cr2files, out_path,  angles[idx])
         print(idx, cam, jpg_file_name, cr2_file_name, angles[idx])
 
+# run : "cmd": ["python", "$file", "-d", "../Calib", "-o", "../Calib_rotated", "-s", "../shells"] 
+    
+def main(argv):
+    print(argv)
+    try:
+        opts, args = getopt.getopt(argv, "hd:o:s:", ["dir=", "out=", "shell="])
+    except getopt.GetoptError as e:
+        print('6-roate-shell.py -d <workdir> -o <outdir> -s <shelldir>')
+        sys.exit()        
+    
+    for opt, arg in opts:
+        if opt == '-h':
+            print('6-roate-shell.py -d <workdir> -o <outdir> -s <shelldir>')
+            sys.exit()
+        elif opt in ('-d', '--dir'):
+            workdir = arg
+        elif opt in ('-o', '--out'):
+            outdir = arg
+        elif opt in ('-s', '--shell'):
+            shelldir = arg
 
-def main():
-    workdir = '../Humans_classified'
-    outdir = '../Humans_rotated'
-    shelldir = '../shells'
+    print('workdir = ', workdir)
+    print('outdir = ', outdir)
+    print('shelldir = ', shelldir)
+
     qing_mkdir(outdir)
     qing_mkdir(shelldir)
     rotate(workdir, outdir, shelldir)
@@ -54,7 +75,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])
 
 
 # if not os.path.exists(dst_folder):
