@@ -26,7 +26,7 @@ def main():
     workdir = '../Humans_classified'
     outdir = '../Humans_frame'
     qing_mkdir(outdir)
-    framecnt = 159
+    framecnt = 10
     move_frame(workdir, outdir, framecnt)
 
 if __name__ == '__main__':

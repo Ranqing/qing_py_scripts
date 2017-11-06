@@ -13,7 +13,8 @@ import cv2
 
 QING_EXIF_DATETIME = 'Image DateTime'
 QING_TIME_STAMP = datetime.datetime(1990, 8, 22, 0, 0, 0)
-QING_CLASSIFIED_INTERVAL = 5
+QING_CLASSIFIED_INTERVAL = 2
+
 
 # isvalue = 0: sort on keys
 # isvalue = 1: sort on values
@@ -22,6 +23,13 @@ def qing_sort_dict(mydict, isvalue):
     sorted_mydict = sorted(mydict.items(), key=operator.itemgetter(isvalue))
     return sorted_mydict
 
+# get key/value from dict data-struture
+def qing_traverse_dict_to_vec(in_dict, isvalue):
+    size = len(in_dict)
+    out_vec = []
+    for i in range(0, size):
+        out_vec.append(in_dict[i][isvalue])
+    return out_vec
 
 def qing_zero_if_none(x):
     return 0 if x is None else x

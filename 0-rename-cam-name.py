@@ -11,7 +11,7 @@ def rename_cam_names(workdir):
 		os.rename(cam_dir, new_cam_dir)
 
 def main():
-	workdir = '../Calib'
+	workdir = '../Calib_bu_bu'
 	rename_cam_names(workdir)
 
 if __name__ == '__main__':
