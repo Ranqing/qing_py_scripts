@@ -4,9 +4,8 @@ import glob
 import getopt
 
 # run : "cmd": ["python", "$file", "-d", "../Calib"]
-
-
-def check_num(workdir):
+# check number of jpg files between stereo cameras for calibration
+def check_num_between_stereo_cams(workdir):
     sub_dirs = sorted(os.listdir(workdir))
 
     folder_idx = -1

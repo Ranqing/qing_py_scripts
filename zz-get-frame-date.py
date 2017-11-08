@@ -1,6 +1,5 @@
 from qing_operation import *
 
-
 def frame_dates(workdir, outdir):
     folders = sorted(os.listdir(workdir))
     for f in folders:
