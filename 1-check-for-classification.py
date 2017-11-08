@@ -34,7 +34,7 @@ class ImageChecker(object):
         qing_mkdir(first_frame_dir)
         outobj = open(first_frame_txt, 'w')
 
-        for cam in self.cam_names: 
+        for cam in self.cam_names:
             cam_dir = self.workdir + '/' + cam
             first_frame_name = sorted(glob.glob(cam_dir + '/*.JPG'))[0]
             first_frame_time = qing_str_to_datetime(
@@ -50,10 +50,8 @@ class ImageChecker(object):
         outobj.close()
 
 
-
-
 def main():
-    
+
     workdir = '../Humans_two_3'
     qing_checker = ImageChecker(workdir)
     qing_checker.get_camera_names()

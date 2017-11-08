@@ -48,6 +48,7 @@ class ImageClassifier(object):
     # bench_type = 1        # most and earliest camera
 
     CR2 = True
+    DEBUG = False
 
     def __init__(self, workdir):
         super(ImageClassifier, self).__init__()
@@ -403,7 +404,8 @@ class ImageClassifier(object):
                 print('cp ', f, result_f)
                 cmdstr = 'cp ' + f + '\t' + result_f + '\n'
                 cmdobj.write(cmdstr)
-                # shutil.copy(f, result_f)
+                if ImageClassifier.DEBUG:
+                    shutil.copy(f, result_f)
 
                 if ImageClassifier.CR2:
                     cr2_name = jpg_prefix + '.CR2'
