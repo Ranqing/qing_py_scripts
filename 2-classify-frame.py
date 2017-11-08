@@ -11,6 +11,7 @@ def get_files_datetime(folder_path):
     # add for 20171018/Humans_one: L01,L02
     dir_name = os.path.dirname(folder_path)
     cam_name = os.path.basename(folder_path)
+    is_humans_one = False
     if 'Humans_one' in dir_name:
         is_humans_one = True
         manual_frm_idx = 3
@@ -363,6 +364,10 @@ class ImageClassifier(object):
 
     def get_classified_commands(self, cmd_file):
         cmdobj = open(cmd_file, 'w')
+        if ImageClassifier.CR2:
+            cr2_cmd_file = qing_get_filename_prefix(
+                cmd_file) + '_cr2' + qing_get_filename_suffix(cmd_file)
+            cr2_cmdobj = open(cr2_cmd_file, 'w')
 
         # for cam_idx, cam_name in enumerate(self.cam_names):
         #     cam_dir = self.classified_dir + '/' + cam_name
@@ -396,6 +401,8 @@ class ImageClassifier(object):
                 result_f = frm_dir + '/' + cam_name + '_' + \
                     jpg_prefix + '_' + frm_idx + jpg_suffix
                 print('cp ', f, result_f)
+                cmdstr = 'cp ' + f + '\t' + result_f + '\n'
+                cmdobj.write(cmdstr)
                 # shutil.copy(f, result_f)
 
                 if ImageClassifier.CR2:
@@ -404,12 +411,16 @@ class ImageClassifier(object):
                     result_cr2_f = frm_cr2_dir + '/' + cam_name + \
                         '_' + jpg_prefix + '_' + frm_idx + '.CR2'
                     print('mv ', cr2_f, result_cr2_f)
-                    cmdstr = 'mv ' + cr2_f + '\t' + result_cr2_f + '\n'
-                    cmdobj.write(cmdstr)
+                    cr2_cmdstr = 'mv ' + cr2_f + '\t' + result_cr2_f + '\n'
+                    cr2_cmdobj.write(cr2_cmdstr)
                     # shutil.move(cr2_f, result_cr2_f)
             cmdobj.write('\n')
+            if ImageClassifier.CR2:
+                cr2_cmdobj.write('\n')
         cmdobj.close()
         print('saving ' + cmd_file)
+        if ImageClassifier.CR2:
+            print('saving ' + cr2_cmd_file)
         pass
 
     # this function is for testing classification correctness with several

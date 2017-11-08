@@ -175,6 +175,16 @@ def qing_dsp_to_depth(dsp, thresh_msk, imgmtx, stereo_mtx, st_x, st_y, base_d, s
 
     return pointcnt, points, colors
 
+def qing_get_filename_prefix(filename):
+    f_prefix_pos = filename.rfind('.')
+    f_prefix = filename[:f_prefix_pos]
+    return f_prefix
+
+def qing_get_filename_suffix(filename):
+    f_suffix_pos = filename.rfind('.')
+    f_suffix = filename[f_suffix_pos:]
+    return f_suffix 
+
 
 def main():
     pass
