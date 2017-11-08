@@ -9,21 +9,25 @@ import copy
 
 def get_files_datetime(folder_path):
     # add for 20171018/Humans_one: L01,L02
+    dir_name = os.path.dirname(folder_path)
     cam_name = os.path.basename(folder_path)
-    manual_frm_idx = 3
-    manual_interval = 51
+    if 'Humans_one' in dir_name:
+        is_humans_one = True
+        manual_frm_idx = 3
+        manual_interval = 51
+        pass
     # end
 
     files = sorted(glob.glob(folder_path + '/*.JPG'))
-    # fdict = {}
     fdict = defaultdict(lambda: None)
     for frm_idx, f in enumerate(files):
         ftime = qing_read_exif(f, QING_EXIF_DATETIME)
         fdatetime = qing_str_to_datetime(str(ftime))
 
-        if cam_name == 'L01' or cam_name == 'L02':
-            if frm_idx >= manual_frm_idx:
-                fdatetime = fdatetime + timedelta(seconds=manual_interval)
+        if is_humans_one:
+            if 'L01' == cam_name or 'L02' == cam_name:
+                if frm_idx >= manual_frm_idx:
+                    fdatetime = fdatetime + timedelta(seconds=manual_interval)
         fdict[f] = fdatetime
     return fdict
 
@@ -105,10 +109,12 @@ class ImageClassifier(object):
         for cam_idx, frame_dict in enumerate(self.frames_times_dict):
             cam_name = self.cam_names[cam_idx]
             firstsec = qing_datetime_diff_seconds(frame_dict[0][1])
+
             # add for 20171018/Humans_one
-            manual_first_sec_offset = -150
-            if cam_name == 'C15' or cam_name == 'C16':
-                firstsec = firstsec + manual_first_sec_offset  # check by human
+            if 'Humans_one' in self.workdir:
+                if cam_name == 'C15' or cam_name == 'C16':
+                    manual_first_sec_offset = -150
+                    firstsec = firstsec + manual_first_sec_offset  # check by human
             # end
 
             self.first_frame_secs.append(firstsec)
@@ -333,11 +339,11 @@ class ImageClassifier(object):
     def classify_via_bench_camera(self, bench_type):
         if bench_type == 0:
             result_file = self.workdir + '_classified_result_e.txt'
-            cmd_file = self.workdir + '_classified_cmd_e.txt'
+            cmd_file = self.workdir + '_classified_cmd_e.sh'
             self.get_earliest_camera()
         else:
             result_file = self.workdir + '_classified_result_m.txt'
-            cmd_file = self.workdir + '_classified_cmd_m.txt'
+            cmd_file = self.workdir + '_classified_cmd_m.sh'
             self.get_most_and_earliest_camera()
 
         self.frames_times_vec = traverse_datetime_infos(self.frames_times_dict)
@@ -390,17 +396,17 @@ class ImageClassifier(object):
                 result_f = frm_dir + '/' + cam_name + '_' + \
                     jpg_prefix + '_' + frm_idx + jpg_suffix
                 print('cp ', f, result_f)
-                shutil.copy(f, result_f)
-               
+                # shutil.copy(f, result_f)
+
                 if ImageClassifier.CR2:
                     cr2_name = jpg_prefix + '.CR2'
                     cr2_f = dir_name + '/' + cr2_name
                     result_cr2_f = frm_cr2_dir + '/' + cam_name + \
                         '_' + jpg_prefix + '_' + frm_idx + '.CR2'
-                    print('cp ', cr2_f, result_cr2_f)
-                    cmdstr = 'cp ' + f + '\t' + result_cr2_f + '\n'
+                    print('mv ', cr2_f, result_cr2_f)
+                    cmdstr = 'mv ' + cr2_f + '\t' + result_cr2_f + '\n'
                     cmdobj.write(cmdstr)
-                    # shutil.copy(cr2_f, result_cr2_f)
+                    # shutil.move(cr2_f, result_cr2_f)
             cmdobj.write('\n')
         cmdobj.close()
         print('saving ' + cmd_file)
