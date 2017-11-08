@@ -53,7 +53,8 @@ class ImageChecker(object):
 
 
 def main():
-    workdir = '../Humans_0'
+    
+    workdir = '../Humans_one'
     qing_checker = ImageChecker(workdir)
     qing_checker.get_camera_names()
     # qing_checker.check_cr2_and_jpg_files()

@@ -4,9 +4,6 @@ from datetime import datetime, timedelta
 import getopt
 import copy
 
-CR2 = False
-CMD = True
-
 # get datetime from exif info and the datetime saved in a dict data-structure
 
 
@@ -44,6 +41,8 @@ class ImageClassifier(object):
     """ImageClassifier"""
     # bench_type = 0        # earliest camera
     # bench_type = 1        # most and earliest camera
+
+    CR2 = True
 
     def __init__(self, workdir):
         super(ImageClassifier, self).__init__()
@@ -348,25 +347,32 @@ class ImageClassifier(object):
         # return
 
         self.result_dir = self.workdir + '_frame'
+        self.result_cr2_dir = self.result_dir + '_cr2'
         qing_mkdir(self.result_dir)
-        self.classified_dir = self.workdir + '_classified'
-        qing_mkdir(self.classified_dir)
+        qing_mkdir(self.result_cr2_dir)
+        # self.classified_dir = self.workdir + '_classified'
+        # qing_mkdir(self.classified_dir)
         self.get_classified_commands(cmd_file)
         pass
 
     def get_classified_commands(self, cmd_file):
         cmdobj = open(cmd_file, 'w')
 
-        for cam_idx, cam_name in enumerate(self.cam_names):
-            cam_dir = self.classified_dir + '/' + cam_name
-            qing_mkdir(cam_dir)
-            pass
+        # for cam_idx, cam_name in enumerate(self.cam_names):
+        #     cam_dir = self.classified_dir + '/' + cam_name
+        #     qing_mkdir(cam_dir)
+        #     pass
 
         for idx, frm_names in enumerate(self.classified_results):
             frm_idx = 'FRM_%04d' % (idx)
             frm_dir = self.result_dir + '/' + frm_idx
             qing_mkdir(frm_dir)
             print('frm_dir = ', frm_dir)
+
+            if ImageClassifier.CR2:
+                frm_cr2_dir = self.result_cr2_dir + '/' + frm_idx
+                qing_mkdir(frm_cr2_dir)
+                print('frm_cr2_dir = ', frm_cr2_dir)
 
             for f in frm_names:
                 dir_name = os.path.dirname(f)
@@ -375,25 +381,26 @@ class ImageClassifier(object):
 
                 jpg_prefix = jpg_name[:-4]
                 jpg_suffix = jpg_name[-4:]
-                new_f = self.classified_dir + '/' + cam_name + \
-                    '/' + jpg_prefix + '_' + frm_idx + jpg_suffix
-                # print('cp ', f, new_f)
-                # shutil.copy(f, new_f)
 
-                new_cmd_f = frm_dir + '/' + cam_name + '_' + \
+                # classified_f = self.classified_dir + '/' + cam_name + \
+                #     '/' + jpg_prefix + '_' + frm_idx + jpg_suffix
+                # print('cp ', f, classified_f)
+                # shutil.copy(f, classified_f)
+
+                result_f = frm_dir + '/' + cam_name + '_' + \
                     jpg_prefix + '_' + frm_idx + jpg_suffix
-                print('cp ', f, new_cmd_f)
-                shutil.copy(f, new_cmd_f)
-                cmdstr = 'cp ' + f + '\t' + new_cmd_f + '\n'
-                cmdobj.write(cmdstr)
-
-                if CR2:
+                print('cp ', f, result_f)
+                shutil.copy(f, result_f)
+               
+                if ImageClassifier.CR2:
                     cr2_name = jpg_prefix + '.CR2'
                     cr2_f = dir_name + '/' + cr2_name
-                    new_cr2_f = classified_dir + '/' + cam_name + \
-                        '/' + jpg_prefix + '_' + frm_idx + '.CR2'
-                    print('cp ', cr2_f, new_cr2_f)
-                    shutil.copy(cr2_f, new_cr2_f)
+                    result_cr2_f = frm_cr2_dir + '/' + cam_name + \
+                        '_' + jpg_prefix + '_' + frm_idx + '.CR2'
+                    print('cp ', cr2_f, result_cr2_f)
+                    cmdstr = 'cp ' + f + '\t' + result_cr2_f + '\n'
+                    cmdobj.write(cmdstr)
+                    # shutil.copy(cr2_f, result_cr2_f)
             cmdobj.write('\n')
         cmdobj.close()
         print('saving ' + cmd_file)
