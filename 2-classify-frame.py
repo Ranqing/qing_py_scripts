@@ -1,6 +1,8 @@
 from qing_operation import *
 from collections import defaultdict
+from datetime import datetime, timedelta
 import getopt
+import copy
 
 CR2 = False
 CMD = True
@@ -9,12 +11,22 @@ CMD = True
 
 
 def get_files_datetime(folder_path):
+    # add for 20171018/Humans_one: L01,L02
+    cam_name = os.path.basename(folder_path)
+    manual_frm_idx = 3
+    manual_interval = 51
+    # end
+
     files = sorted(glob.glob(folder_path + '/*.JPG'))
     # fdict = {}
     fdict = defaultdict(lambda: None)
-    for f in files:
+    for frm_idx, f in enumerate(files):
         ftime = qing_read_exif(f, QING_EXIF_DATETIME)
         fdatetime = qing_str_to_datetime(str(ftime))
+
+        if cam_name == 'L01' or cam_name == 'L02':
+            if frm_idx >= manual_frm_idx:
+                fdatetime = fdatetime + timedelta(seconds=manual_interval)
         fdict[f] = fdatetime
     return fdict
 
@@ -62,58 +74,19 @@ class ImageClassifier(object):
                           str(len(frame_dict)) + ' files' + '\n')
             for frm_idx, frm_pair in enumerate(frame_dict):
                 frm_sec = qing_datetime_diff_seconds(frm_pair[1])
+                # frm_interval = frm_sec - self.first_frame_secs[cam_idx]
                 frm_interval = frm_sec - self.first_frame_secs[cam_idx]
                 tempobj.write(frm_pair[0] + '\t' + str(frm_pair[1]) +
                               '\t' + str(frm_sec) + '\t' + str(frm_interval) + '\n')
             tempobj.write('\n')
         print('saving ' + tempfile)
 
-    def calc_classified_result_gt(self):
-        tempfile = '../classified_results_ground_truth.txt'
-        tempobj = open(tempfile, 'w')
-        frames_times_dict = self.frames_times_dict.copy()
-        frm_num = len(frames_times_dict[0])
-        self.gt_classified_results_dict = [[] for k in range(frm_num)]
-        # print(len(classified_results_dict))
-
-        for frm_idx in range(0, frm_num):
-            for cam_idx, frame_dict in enumerate(frames_times_dict):
-                cam_name = self.cam_names[cam_idx]
-                if frm_idx == 3 and cam_name == 'C06':
-                    continue
-                if frm_idx == 4 and cam_name == 'R05':
-                    continue
-                if frm_idx == 5 and (cam_name == 'R06' or cam_name == 'C05'):
-                    continue
-
-                print('frm_idx = ', frm_idx, 'cam_idx = ', cam_idx, 'cam_name = ', cam_name,
-                      '%d files remain.' % (len(frame_dict)))
-                self.gt_classified_results_dict[frm_idx].append(frame_dict[0])
-                frame_dict.remove(frame_dict[0])
-
-        for frm_idx in range(0, frm_num):
-            same_frame_dict = self.gt_classified_results_dict[frm_idx]
-            out_str = 'FRM_%04d' % (frm_idx) + \
-                '\t%d files' % (len(same_frame_dict))
-            print(out_str)
-            tempobj.write(out_str + '\n')
-            for cam_idx, frm_pair in enumerate(same_frame_dict):
-                frm_name = frm_pair[0]
-                frm_time = frm_pair[1]
-                frm_interval = qing_datetime_diff_seconds(frm_time)
-                out_str = frm_name + '\t' + \
-                    str(frm_time) + '\t' + str(frm_interval)
-                print(out_str)
-                tempobj.write(out_str + '\n')
-            tempobj.write('\n')
-        print('saving ', tempfile)
-
     def get_frames_names_and_datetimes(self):
         self.frames_names_vec = []            # frame names vector of each camera
-        # frame names - datetimes dictionary of each camera
-        self.frames_times_dict = []
-        self.first_frame_secs = []         # first frame seconds vector
-        self.first_frame_secs_dict = {}    # empty dictionary
+        self.frames_times_dict = []           # list of frame names and datetimes pair
+        self.first_frame_secs = []            # first frame seconds vector
+        # empty dictionary: camera_name <-> first_frame_sec
+        self.first_frame_secs_dict = {}
 
         print('get_frame_names_and_datetimes:')
         for idx, f in enumerate(self.cam_names):
@@ -131,11 +104,19 @@ class ImageClassifier(object):
         # print log to check
         print('get_frames_names_and_datetimes: ')
         for cam_idx, frame_dict in enumerate(self.frames_times_dict):
+            cam_name = self.cam_names[cam_idx]
             firstsec = qing_datetime_diff_seconds(frame_dict[0][1])
+            # add for 20171018/Humans_one
+            manual_first_sec_offset = -150
+            if cam_name == 'C15' or cam_name == 'C16':
+                firstsec = firstsec + manual_first_sec_offset  # check by human
+            # end
+
             self.first_frame_secs.append(firstsec)
             self.first_frame_secs_dict[self.cam_names[cam_idx]] = firstsec
             print(self.cam_names[cam_idx], '%d files' % len(frame_dict), frame_dict[
                   0][0],  frame_dict[0][1], self.first_frame_secs[-1])
+
         self.save_names_and_datetimes()
         # sys.exit(1)
         # self.calc_classified_result_gt()
@@ -185,17 +166,6 @@ class ImageClassifier(object):
         print('bench_cam_idx = ', self.bench_cam_idx, ', bench_cam_name = ', self.cam_names[self.bench_cam_idx],
               ', bench_first_sec = ', self.bench_first_sec, ', bench_frm_num = ', self.bench_frm_num)
 
-    def calc_bench_frm_intervals(self):
-        print('calculate bench frame intervals between cameras')
-
-        self.bench_frame_intervals = []
-        for cam_idx, frame_dict in enumerate(self.frames_times_dict):
-            cur_bench_frame_sec = qing_datetime_diff_seconds(
-                frame_dict[self.bench_frm_idx][1])
-            self.bench_frame_intervals.append(
-                cur_bench_frame_sec - self.bench_first_sec)
-            print(self.cam_names[cam_idx], self.bench_frame_intervals[-1])
-
     def get_same_time_frame_between(self, bench_frame_sec):
         epsilon = 1.0
         same_frame_dict = []
@@ -227,9 +197,18 @@ class ImageClassifier(object):
         return same_frame_dict
         pass
 
+    def calc_bench_frm_intervals(self):
+        print('calculate bench frame intervals between cameras')
+        self.bench_frame_intervals = []
+        for cam_idx, frame_dict in enumerate(self.frames_times_dict):
+            cur_bench_frame_sec = qing_datetime_diff_seconds(
+                frame_dict[self.bench_frm_idx][1])
+            self.bench_frame_intervals.append(
+                cur_bench_frame_sec - self.bench_first_sec)
+            print(self.cam_names[cam_idx], self.bench_frame_intervals[-1])
+
     def classify_via_intervals_between_cameras(self, result_file):
         outobj = open(result_file, 'w')
-
         self.calc_bench_frm_intervals()
         self.classified_results = []
 
@@ -258,13 +237,6 @@ class ImageClassifier(object):
             outobj.write('\n')
         outobj.close()
         pass
-
-    def calc_bench_frame_secs(self):
-        self.bench_frame_secs = []
-        for cam_idx, frame_times in enumerate(self.frames_times_vec):
-            frame_sec = qing_datetime_diff_seconds(
-                frame_times[self.bench_frm_idx])
-            self.bench_frame_secs.append(frame_sec)
 
     def get_same_time_frame_within(self, bench_cur_frm_interval):
         epsilon = 3.0
@@ -302,6 +274,21 @@ class ImageClassifier(object):
         return same_frame_dict, missed_cams_list
         pass
 
+    def calc_bench_frame_secs(self):
+        print('calculate bench frame seconds within each camera')
+        self.bench_frame_secs = copy.deepcopy(self.first_frame_secs)
+        # self.bench_frame_secs = []  # i.e. frame secs of first frame of each camera.
+        # for cam_idx, frame_times in enumerate(self.frames_times_vec):
+        #     cam_name = self.cam_names[cam_idx]
+        #     frame_sec = qing_datetime_diff_seconds(
+        #         frame_times[self.bench_frm_idx])
+
+        #     # add for 20171018/Humans_one
+        #     if cam_name == 'C15' or cam_name == 'C16':
+        #         frame_sec = frame_sec - 150
+        #     # end
+        #     self.bench_frame_secs.append(frame_sec)
+
     def classify_via_intervals_within_cameras(self, result_file):
         outobj = open(result_file, 'w')
         self.classified_results = []
@@ -312,7 +299,6 @@ class ImageClassifier(object):
               self.bench_cam_idx], ': ')
 
         for frm_idx, frame_time in enumerate(self.frames_times_vec[self.bench_cam_idx]):
-
             bench_cur_frm_interval = qing_datetime_diff_seconds(
                 frame_time) - self.bench_frame_secs[self.bench_cam_idx]
             same_frame_dict, missed_cams_list = self.get_same_time_frame_within(
@@ -330,18 +316,42 @@ class ImageClassifier(object):
             same_frame_names = []
             for f in same_frame_dict:
                 f_name = f[0]
+                c_name = f_name[-16:-13]
                 f_interval = qing_datetime_diff_seconds(f[1])
                 f_interval_within = f_interval - \
-                    self.first_frame_secs_dict[f_name[-16:-13]]
+                    self.first_frame_secs_dict[c_name]
                 same_frame_names.append(f_name)
                 print(f_name + '\t' + str(f_interval_within))
                 outobj.write(f_name + '\t' +
                              str(f[1]) + '\t' + str(f_interval) + '\t' + str(f_interval_within) + '\n')
             self.classified_results.append(same_frame_names)
             self.missed_cameras.append(missed_cams_list)
-            print '\n'
+            print('\n')
             outobj.write('\n')
         outobj.close()
+        pass
+
+    def classify_via_bench_camera(self, bench_type):
+        if bench_type == 0:
+            result_file = self.workdir + '_classified_result_e.txt'
+            cmd_file = self.workdir + '_classified_cmd_e.txt'
+            self.get_earliest_camera()
+        else:
+            result_file = self.workdir + '_classified_result_m.txt'
+            cmd_file = self.workdir + '_classified_cmd_m.txt'
+            self.get_most_and_earliest_camera()
+
+        self.frames_times_vec = traverse_datetime_infos(self.frames_times_dict)
+        # self.classify_via_intervals_between_cameras(result_file)
+        self.classify_via_intervals_within_cameras(result_file)
+
+        # return
+
+        self.result_dir = self.workdir + '_frame'
+        qing_mkdir(self.result_dir)
+        self.classified_dir = self.workdir + '_classified'
+        qing_mkdir(self.classified_dir)
+        self.get_classified_commands(cmd_file)
         pass
 
     def get_classified_commands(self, cmd_file):
@@ -373,7 +383,7 @@ class ImageClassifier(object):
                 new_cmd_f = frm_dir + '/' + cam_name + '_' + \
                     jpg_prefix + '_' + frm_idx + jpg_suffix
                 print('cp ', f, new_cmd_f)
-                # shutil.copy(f, new_cmd_f)
+                shutil.copy(f, new_cmd_f)
                 cmdstr = 'cp ' + f + '\t' + new_cmd_f + '\n'
                 cmdobj.write(cmdstr)
 
@@ -389,29 +399,46 @@ class ImageClassifier(object):
         print('saving ' + cmd_file)
         pass
 
-    def classify_via_bench_camera(self, bench_type):
-        if bench_type == 0:
-            result_file = self.workdir + '_classified_result_e.txt'
-            cmd_file = self.workdir + '_classified_cmd_e.txt'
-            self.get_earliest_camera()
-        else:
-            result_file = self.workdir + '_classified_result_m.txt'
-            cmd_file = self.workdir + '_classified_cmd_m.txt'
-            self.get_most_and_earliest_camera()
+    # this function is for testing classification correctness with several
+    # frames
+    # def calc_classified_result_gt(self):
+    #     tempfile = '../classified_results_ground_truth.txt'
+    #     tempobj = open(tempfile, 'w')
+    #     frames_times_dict = self.frames_times_dict.copy()
+    #     frm_num = len(frames_times_dict[0])
+    #     self.gt_classified_results_dict = [[] for k in range(frm_num)]
+    #     # print(len(classified_results_dict))
 
-        self.frames_times_vec = traverse_datetime_infos(self.frames_times_dict)
-        # self.classify_via_intervals_between_cameras(result_file)
-        self.classify_via_intervals_within_cameras(result_file)
+    #     for frm_idx in range(0, frm_num):
+    #         for cam_idx, frame_dict in enumerate(frames_times_dict):
+    #             cam_name = self.cam_names[cam_idx]
+    #             if frm_idx == 3 and cam_name == 'C06':
+    #                 continue
+    #             if frm_idx == 4 and cam_name == 'R05':
+    #                 continue
+    #             if frm_idx == 5 and (cam_name == 'R06' or cam_name == 'C05'):
+    #                 continue
+    #             print('frm_idx = ', frm_idx, 'cam_idx = ', cam_idx, 'cam_name = ', cam_name,
+    #                   '%d files remain.' % (len(frame_dict)))
+    #             self.gt_classified_results_dict[frm_idx].append(frame_dict[0])
+    #             frame_dict.remove(frame_dict[0])
 
-        # return
-
-        self.result_dir = self.workdir + '_frame'
-        qing_mkdir(self.result_dir)
-        self.classified_dir = self.workdir + '_classified'
-        qing_mkdir(self.classified_dir)
-        # self.get_classified_commands(cmd_file)
-
-        # self.classify_via_intervals_within_cameras(result_file, cmd_file)
+    #     for frm_idx in range(0, frm_num):
+    #         same_frame_dict = self.gt_classified_results_dict[frm_idx]
+    #         out_str = 'FRM_%04d' % (frm_idx) + \
+    #             '\t%d files' % (len(same_frame_dict))
+    #         print(out_str)
+    #         tempobj.write(out_str + '\n')
+    #         for cam_idx, frm_pair in enumerate(same_frame_dict):
+    #             frm_name = frm_pair[0]
+    #             frm_time = frm_pair[1]
+    #             frm_interval = qing_datetime_diff_seconds(frm_time)
+    #             out_str = frm_name + '\t' + \
+    #                 str(frm_time) + '\t' + str(frm_interval)
+    #             print(out_str)
+    #             tempobj.write(out_str + '\n')
+    #         tempobj.write('\n')
+    #     print('saving ', tempfile)
 
     # def diff_classified_results(self):
     #     # difference between classified result and groundtruth of classified
