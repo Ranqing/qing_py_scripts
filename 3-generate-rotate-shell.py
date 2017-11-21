@@ -65,6 +65,13 @@ class RotateSheller(object):
             print('frames directory: ', self.frmdir,
                   str(self.frm_num) + ' frames.')
 
+            self.frm_files_vec = []
+            for frm_idx, frm_name in enumerate(self.frame_names):
+                frm_dir = self.frmdir + '/' + frm_name
+                frm_files = sorted(glob.glob(frm_dir + '/*.JPG'))
+                frm_num_of_files = len(frm_files)
+                self.frm_files_vec.append(frm_files)
+
     def get_num_of_cams(self):
         self.frm_files_vec = []
         if not os.path.isdir(self.camdir):
@@ -186,6 +193,9 @@ class RotateSheller(object):
         pass
 
 # "cmd": ["python", "$file", "-c", "../Humans_one", "-d", "../Humans_one_frame"]
+# "cmd": ["python", "$file", "-c", "../Humans_two", "-d", "../Humans_two_frame"]
+
+
 def main(argv):
     print(argv)
     try:

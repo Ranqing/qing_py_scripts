@@ -9,7 +9,7 @@ class ImageCropper(object):
     def __init__(self, workdir):
         super(ImageCropper, self).__init__()
         self.workdir = workdir
-        self.frm_workdir = self.workdir + '/Humans_Frame'
+        self.frm_workdir  = self.workdir + '/Rectified_Humans_frame'
         self.crop_workdir = self.workdir + '/Infos_crop_points'
         self.outdir  = self.frm_workdir + '_aligned'
         self.y_offset_fn = 'Y1-Y0.txt'
@@ -101,7 +101,7 @@ class ImageCropper(object):
 
                 # new_image_1 = cv2.warpAffine(image_1,affine_matrix,(cols,rows))
 
-            break
+            # break
 
         pass
 
