@@ -126,6 +126,46 @@ def qing_imagelist_generator(out_filename, dir_path, filetype):
         out_file_object.write(filename + '\n')
     out_file_object.close()
 
+def qing_read_crop_infos(crop_fn):
+    crop_points = []
+    crop_sizes = []
+
+    with open(crop_fn, 'r') as f:
+        for line in f:
+            if line.startswith('#'):
+                continue
+            words = line.split(' ')
+            crop_x = int(words[1])
+            crop_y = int(words[2])
+            crop_w = int(words[3])
+            crop_h = int(words[4])
+            if crop_x == 0 and crop_y == 0 and crop_w == 0 and crop_h == 0:
+                continue
+            crop_points.append((crop_x, crop_y))
+            crop_sizes.append((crop_w, crop_h))
+    return crop_points, crop_sizes
+
+def qing_crop_a_image(image_mtx, crop_pt, crop_sz):
+    crop_x = crop_pt[0]
+    crop_y = crop_pt[1]
+    crop_w = crop_sz[0]
+    crop_h = crop_sz[1]
+    print(crop_x, crop_y, crop_w, crop_h)
+
+    dshape = image_mtx.shape
+    # numpy.zeros(dshape, dtype=im.dtype)
+    crop_image_mtx = np.zeros(dshape, dtype = image_mtx.dtype)
+    if crop_x + crop_w >= dshape[1]:
+        print("crop point x-coordinate out of range.", crop_x+crop_w, dshape[1])
+        return crop_image_mtx
+    if crop_y + crop_h >= dshape[0]:
+        print("crop point y-coordinate out of range.", crop_y+crop_h, dshape[0])
+        return crop_image_mtx
+
+    crop_image_mtx = image_mtx[crop_y:crop_y+crop_h, crop_x:crop_x + crop_w]
+    return crop_image_mtx
+
+    pass
 
 def qing_dsp_to_depth(dsp, thresh_msk, imgmtx, stereo_mtx, st_x, st_y, base_d, scale):
 

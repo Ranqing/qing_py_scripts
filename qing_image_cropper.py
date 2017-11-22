@@ -9,18 +9,18 @@ class ImageCropper(object):
     def __init__(self, workdir):
         super(ImageCropper, self).__init__()
         self.workdir = workdir
-        self.frm_workdir  = self.workdir + '/Rectified_Humans_frame'
+        self.frm_workdir = self.workdir + '/Humans_frame'
         self.crop_workdir = self.workdir + '/Infos_crop_points'
-        self.outdir  = self.frm_workdir + '_aligned'
+        self.outdir = self.frm_workdir + '_aligned'
         self.y_offset_fn = 'Y1-Y0.txt'
         qing_mkdir(self.outdir)
 
     def display(self):
-        print('workdir:' , self.workdir)
+        print('workdir:', self.workdir)
         print('frm_workdir: ', self.frm_workdir)
         print('crop_workdir: ', self.crop_workdir)
         print('out_dir: ', self.outdir)
-        print('y_offset_fn: ' , self.y_offset_fn)
+        print('y_offset_fn: ', self.y_offset_fn)
         print('after initialization: ')
         print(self.frm_folders)
         print(self.crop_infos)
@@ -28,16 +28,18 @@ class ImageCropper(object):
     def init(self):
         self.frm_folders = []
         self.crop_infos = []
-        folder_content = sorted(os.listdir(self.frm_workdir))
-        for f in folder_content:
-            if f.startswith('.'):
-                continue
-            f_dir = self.frm_workdir + '/' + f
-            self.frm_folders.append(f)
-        folder_content = sorted(os.listdir(self.crop_workdir))
-        for f in folder_content:
-            f_dir = self.crop_workdir + '/' + f
-            self.crop_infos.append(f)
+        if os.path.isdir(self.frm_workdir):
+            folder_content = sorted(os.listdir(self.frm_workdir))
+            for f in folder_content:
+                if f.startswith('.'):
+                    continue
+                f_dir = self.frm_workdir + '/' + f
+                self.frm_folders.append(f)
+        if os.path.isdir(self.crop_workdir):
+            folder_content = sorted(os.listdir(self.crop_workdir))
+            for f in folder_content:
+                f_dir = self.crop_workdir + '/' + f
+                self.crop_infos.append(f)
 
     def read_in_y_offset(self):
         self.yoffset_dict = defaultdict(lambda: None)
@@ -103,10 +105,80 @@ class ImageCropper(object):
 
             # break
 
-        pass
+    def crop_image(self):
+        self.aligned_workdir = self.outdir
+        self.outdir = self.aligned_workdir + '_cropped'
+        qing_mkdir(self.outdir)
 
-        def crop_image(self):
-        	pass
+        frame_cnt = len(self.frm_folders)
+        if 0 == frame_cnt:
+            if os.path.isdir(self.aligned_workdir):
+                folder_content = sorted(os.listdir(self.aligned_workdir))
+                for f in folder_content:
+                    if f.startswith('.'):
+                        continue
+                    self.frm_folders.append(f)
+        print(self.aligned_workdir)
+        print(self.outdir)
+        print(self.frm_folders)
+
+        for idx, fn in enumerate(self.crop_infos):
+            frm_name = self.frm_folders[idx]
+            if frm_name != 'FRM_0248':
+            	continue
+            crop_fn = self.crop_workdir + '/' + fn
+            crop_in_dir = self.aligned_workdir + '/' + frm_name
+            crop_out_dir = self.outdir + '/' + frm_name
+            qing_mkdir(crop_out_dir)
+            print()
+            print(crop_out_dir)
+
+            image_files = sorted(glob.glob(crop_in_dir + '/*.png'))
+            crop_points, crop_sizes = qing_read_crop_infos(crop_fn)
+            # print('crop_points: ' , crop_points)
+            # print('crop_sizes: ', crop_sizes)
+            # continue
+
+            image_cnt = len(image_files)
+            for idx in range(0, image_cnt, 2):
+                image_fn_0 = image_files[idx]
+                image_fn_1 = image_files[idx + 1]
+
+                image_basename_0 = os.path.basename(image_fn_0)
+                image_basename_1 = os.path.basename(image_fn_1)
+
+                out_image_fn_0 = crop_out_dir + '/' + image_basename_0
+                out_image_fn_1 = crop_out_dir + '/' + image_basename_1
+                crop_pt_0 = crop_points[idx]
+                crop_pt_1 = crop_points[idx + 1]
+                crop_sz_0 = crop_sizes[idx]
+                crop_sz_1 = crop_sizes[idx + 1]
+                if crop_pt_0[1] != crop_pt_1[1]:
+                    print(frm_name, image_basename_0,
+                          image_basename_1, 'wrong crop points')
+                    continue
+                if crop_sz_0 != crop_sz_1:
+                    print(frm_name, image_basename_0,
+                          image_basename_1, 'wrong crop sizes')
+                    continue
+
+                # print()
+                # print(image_fn, '<->', out_image_fn)
+
+                image_mtx_0 = cv2.imread(image_fn_0)
+                crop_image_mtx_0 = qing_crop_a_image(
+                    image_mtx_0, crop_pt_0, crop_sz_0)
+                cv2.imwrite(out_image_fn_0, crop_image_mtx_0)
+                image_mtx_1 = cv2.imread(image_fn_1)
+                crop_image_mtx_1 = qing_crop_a_image(
+                    image_mtx_1, crop_pt_1, crop_sz_1)
+                cv2.imwrite(out_image_fn_1, crop_image_mtx_1)
+                print(image_fn_0, '->', out_image_fn_0, image_mtx_0.shape, crop_image_mtx_0.shape)
+                print(image_fn_1, '->', out_image_fn_1, image_mtx_1.shape, crop_image_mtx_1.shape)
+                # break
+            break
+
+        pass
 
 
 def main(argv):
@@ -127,7 +199,7 @@ def main(argv):
     qing_cropper.init()
     qing_cropper.display()
     qing_cropper.apply_y_offset()
-    # qing_cropper.corp_image()
+    # qing_cropper.crop_image()
 
 
 if __name__ == '__main__':
