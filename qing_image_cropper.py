@@ -9,10 +9,10 @@ class ImageCropper(object):
     def __init__(self, workdir):
         super(ImageCropper, self).__init__()
         self.workdir = workdir
-        self.frm_workdir = self.workdir + '/Humans_frame'
+        self.frm_workdir = self.workdir + '/Rectified_Humans_mask'
         self.crop_workdir = self.workdir + '/Infos_crop_points'
         self.outdir = self.frm_workdir + '_aligned'
-        self.y_offset_fn = 'Y1-Y0.txt'
+        self.y_offset_fn = 'Y1-Y0-MSK-0199.txt'
         qing_mkdir(self.outdir)
 
     def display(self):
@@ -55,6 +55,8 @@ class ImageCropper(object):
 
         for folder in self.frm_folders:
             if 'aligned_' in folder:
+                continue
+            if folder != 'FRM_0199':
                 continue
 
             folder_dir = self.frm_workdir + '/' + folder

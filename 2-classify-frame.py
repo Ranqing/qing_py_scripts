@@ -486,13 +486,13 @@ class ImageClassifier(object):
 def main(argv):
     print(argv)
     try:
-        opts, args = getopt.getopt(argv, "hd:", ["dir="])
+        opts, args = getopt.getopt(argv, "hd:", ["help", "dir="])
     except getopt.GetoptError:
-        print('1-classify-frame.py -d <workdir> ')
+        print('2-classify-frame.py -d <workdir> ')
         sys.exit()
     for opt, arg in opts:
         if opt == '-h':
-            print('1-classify-frame.py -d <workdir>')
+            print('2-classify-frame.py -d <workdir>')
             sys.exit()
         elif opt in ("-d", "--dir"):
             workdir = arg
