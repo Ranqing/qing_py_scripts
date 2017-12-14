@@ -31,7 +31,7 @@ def copy_ply_files(src_dir, dst_dir):
         new_ply = dst_dir + '/' + ply_fn
         dst_ply_files.append(new_ply)
         print(ply, new_ply)
-        # shutil.copy(ply, new_ply)
+        shutil.copy(ply, new_ply)
 
     return dst_ply_files
 
@@ -117,8 +117,8 @@ def main(argv):
     re_ply_folder = re_frm_folder + '_PLY'
 
     # rename_initial_rigid_extrinsics_once(tf_folder)
-    # copy_and_rename_ply(re_folder, re_frm_folder, re_ply_folder)
-    copy_and_rename_tf(tf_folder, re_ply_folder, frmid)
+    copy_and_rename_ply(re_folder, re_frm_folder, re_ply_folder)
+    # copy_and_rename_tf(tf_folder, re_ply_folder, frmid)
 
 
 if __name__ == '__main__':
