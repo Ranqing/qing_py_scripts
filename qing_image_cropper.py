@@ -91,26 +91,26 @@ class ImageCropper(object):
 
         frm_dir = self.frm_workdir + '/FRM_' + self.frameid
         self.frm_files = sorted(glob.glob(frm_dir + '/*.png'))
-        self.frm_cnt = len(frm_files)
-        print(frm_cnt)
-        print(frm_files)
+        self.frm_cnt = len(self.frm_files)
+        print(self.frm_cnt)
+        print(self.frm_files)
         print(frm_dir, '->', new_frm_dir)
         self.apply_offset(self.frm_files, self.frm_cnt, frm_dir, new_frm_dir)
 
         msk_dir = self.msk_workdir + '/FRM_' + self.frameid
         self.msk_files = sorted(glob.glob(msk_dir + '/*.png'))
-        self.msk_cnt = len(msk_files)
-        print(msk_cnt)
-        print(msk_files)
+        self.msk_cnt = len(self.msk_files)
+        print(self.msk_cnt)
+        print(self.msk_files)
         print(msk_dir, '->', new_msk_dir)
         self.apply_offset(self.msk_files, self.msk_cnt, msk_dir, new_msk_dir)
 
     def apply_offset_to_file(self, f, new_f, affine_matrix):
         print(affine_matrix)
-        return
+       
         img = cv2.imread(f)
         rows, cols, nchannels = img.shape
-        new_img = cv2.warpAffine(f, affine_matrix, (cols, rows))
+        new_img = cv2.warpAffine(img, affine_matrix, (cols, rows))
         cv2.imwrite(new_f, new_img)
 
     def apply_offset(self, files, cnt, in_dir, out_dir):
@@ -130,14 +130,14 @@ class ImageCropper(object):
             if 0 == y_offset:
                 print('copy ', f_0, ' to ', new_f_0)
                 print('copy ', f_1, ' to ', new_f_1)
-                # shutil.copy(f_0, new_f_0)
-                # shutil.copy(f_1, new_f_1)
+                shutil.copy(f_0, new_f_0)
+                shutil.copy(f_1, new_f_1)
 
             else:
                 print('copy ', f_0, ' to ', new_f_0)
                 print('affine  ', f_1, ' to ', new_f_1)
                 affine_matrix = np.float32([[1, 0, 0], [0, 1, y_offset]])
-                # shutil.copy(f_0, new_f_0)
+                shutil.copy(f_0, new_f_0)
                 self.apply_offset_to_file(f_1, new_f_1, affine_matrix)
 
     def crop_image_to_frm(self):
@@ -149,8 +149,9 @@ class ImageCropper(object):
         print(crop_fn)
         print(crop_out_dir)
 
+        in_frm_dir = self.workdir + '/FRM_' + self.frameid
+
         if 0 == self.frm_cnt:
-            in_frm_dir = self.workdir + '/FRM_' + self.frameid
 
             if os.path.isdir(self.aligned_frm_out_dir):
                 in_frm_dir = self.aligned_frm_out_dir + '/FRM_' + self.frameid
@@ -158,11 +159,11 @@ class ImageCropper(object):
                 if 0 == len(files):
                     in_frm_dir = self.frm_workdir + '/FRM_' + self.frameid
 
-        print(in_frm_dir)
+        print('in-frm_dir:', in_frm_dir)
         self.frm_files = sorted(glob.glob(in_frm_dir + '/*.png'))
         self.frm_cnt = len(self.frm_files)
-        # print(self.frm_files)
-        # print(self.frm_cnt)
+        print(self.frm_files)
+        print(self.frm_cnt)
 
         crop_points, crop_sizes = qing_read_crop_infos(crop_fn)
         print('crop_points: ', crop_points)
@@ -220,8 +221,8 @@ def main(argv):
     qing_cropper = ImageCropper(workdir, frameid)
     qing_cropper.init()
     qing_cropper.display()
-    # qing_cropper.apply_y_offset_to_frm()
-    qing_cropper.crop_image_to_frm()
+    qing_cropper.apply_y_offset_to_frm()
+    # qing_cropper.crop_image_to_frm()
 
 
 if __name__ == '__main__':
