@@ -73,7 +73,7 @@ def rename_tf_files(tf_files, frameid):
     for idx, tf in enumerate(tf_files):
         tf_fn = os.path.basename(tf)
         tf_dir = os.path.dirname(tf)
-        new_tf_fn = tf_fn[0:3] + frameid + tf_fn[2:]
+        new_tf_fn = tf_fn[0:3] + frameid + tf_fn[7:]
         new_tf = tf_dir + '/' + new_tf_fn
         print(tf, new_tf)
         os.rename(tf, new_tf)
@@ -117,8 +117,11 @@ def main(argv):
     re_ply_folder = re_frm_folder + '_PLY'
 
     # rename_initial_rigid_extrinsics_once(tf_folder)
-    copy_and_rename_ply(re_folder, re_frm_folder, re_ply_folder)
-    # copy_and_rename_tf(tf_folder, re_ply_folder, frmid)
+    # copy_and_rename_ply(re_folder, re_frm_folder, re_ply_folder)
+    tf_folder = '../Human_Extrinsic'
+    frm_folder = '20170618_FRM_' + frmid + '_PLY'
+    re_ply_folder = workdir + '/'+ frm_folder
+    copy_and_rename_tf(tf_folder, re_ply_folder, frmid)
 
 
 if __name__ == '__main__':
