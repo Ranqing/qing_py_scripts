@@ -79,11 +79,13 @@ def rename_tf_files(tf_files, frameid):
         os.rename(tf, new_tf)
 
 
-def copy_and_rename_tf(tf_folder, re_ply_folder, frameid):
-    qing_mkdir(re_ply_folder)
-    tf_files = sorted(glob.glob(re_ply_folder + '/*.tf'))
+def copy_and_rename_tf(tf_folder, out_folder, frameid):
+    print('tf_folder: ', tf_folder)
+    print('out_folder: ', out_folder)
+    qing_mkdir(out_folder)
+    tf_files = sorted(glob.glob(out_folder + '/*.tf'))
     if 0 == len(tf_files):
-        tf_files = copy_tf_files(tf_folder, re_ply_folder)
+        tf_files = copy_tf_files(tf_folder, out_folder)
     else:
         print('HAHAHA')
     rename_tf_files(tf_files, frameid)
@@ -94,34 +96,39 @@ def copy_and_rename_tf(tf_folder, re_ply_folder, frameid):
 def main(argv):
     print(argv)
     try:
-        opts, args = getopt.getopt(argv, "hd:f:", ["help", "dir=", "frm="])
+        opts, args = getopt.getopt(argv, "hd:f:t:", ["help", "dir=", "frm=","time="])
     except getopt.GetoptError:
-        print('6-rename-result.py -d <workdir> -f <frameid> ')
+        print('6-rename-result.py -d <workdir> -f <frameid> -t <timestr>')
         sys.exit()
     for opt, arg in opts:
         if opt == '-h':
-            print('6-rename-result.py -d <workdir> -f <frameid>')
+            print('6-rename-result.py -d <workdir> -f <frameid> -t <timestr>' )
             sys.exit()
         elif opt in ("-d", "--dir"):
             workdir = arg
         elif opt in ("-f", "--frm"):
             frmid = arg
+        elif opt in ("-t", "--time"):
+        	timestr = arg
 
     print('workdir = ', workdir)
     print('frameid = ', frmid)
-    # classify_frame_via_earliest_cam(workdir)
-
-    tf_folder = workdir + '/Initial_Rigid_Extrinsics'
-    re_folder = workdir + '/Result_scanner'
-    re_frm_folder = re_folder + '/FRM_' + frmid
-    re_ply_folder = re_frm_folder + '_PLY'
-
+    print('timestr = ', timestr)
+   
+    # tf_folder = workdir + '/Initial_Rigid_Extrinsics'
     # rename_initial_rigid_extrinsics_once(tf_folder)
+
+    # workdir = workdir + '/' + timestr
+    # re_folder = workdir + '/Result_scanner'
+    # re_frm_folder = re_folder + '/FRM_' + frmid
+    # re_ply_folder = re_frm_folder + '_PLY'
     # copy_and_rename_ply(re_folder, re_frm_folder, re_ply_folder)
-    tf_folder = '../Human_Extrinsic'
-    frm_folder = '20170618_FRM_' + frmid + '_PLY'
-    re_ply_folder = workdir + '/'+ frm_folder
-    copy_and_rename_tf(tf_folder, re_ply_folder, frmid)
+    
+    tf_folder = workdir + 'Human_Extrinsic_Rigid/' + timestr
+    frm_folder = timestr + '_FRM_' + frmid + '_PLY'
+    out_folder = workdir + 'Human_Pointcloud_Registration/' + frm_folder
+    # re_ply_folder = workdir + '/' + frm_folder
+    copy_and_rename_tf(tf_folder, out_folder, frmid)
 
 
 if __name__ == '__main__':

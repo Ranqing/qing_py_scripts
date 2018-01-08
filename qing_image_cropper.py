@@ -221,9 +221,8 @@ def main(argv):
     qing_cropper = ImageCropper(workdir, frameid)
     qing_cropper.init()
     qing_cropper.display()
-    qing_cropper.apply_y_offset_to_frm()
-    # qing_cropper.crop_image_to_frm()
-
+    # qing_cropper.apply_y_offset_to_frm()
+    qing_cropper.crop_image_to_frm()
 
 if __name__ == '__main__':
     main(sys.argv[1:])
